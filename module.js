@@ -12,13 +12,13 @@ function(KairosDBDatasource, KairosDBQueryCtrl) {
   KairosDBQueryOptionsCtrl.templateUrl = "partials/query.options.html";
 
   var KairosDBAnnotationsQueryCtrl = function() {}
-  KairosDBQueryOptionsCtrl.templateUrl = 'partials/annotations.editor.html'
+  KairosDBQueryOptionsCtrl.templateUrl = "partials/annotations.editor.html";
 
   return {
     'Datasource': KairosDBDatasource,
     'QueryCtrl': KairosDBQueryCtrl,
     'ConfigCtrl': KairosDBConfigCtrl,
-    'QueryOptionsCtrl': KairosDBQueryOptionsCtrl
+    'QueryOptionsCtrl': KairosDBQueryOptionsCtrl,
     'AnnotationsQueryCtrl': KairosDBAnnotationsQueryCtrl
   };
 });

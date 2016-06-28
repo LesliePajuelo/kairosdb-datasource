@@ -224,6 +224,28 @@ function (angular, _, sdk, dateMath, kbn) {
     return this.q.when([]);
   };
 
+  KairosDBDatasource.prototype.annotationQuery = function(options) {
+    var query = this.templateSrv.replace(options.annotation.query, {}, 'glob');
+    var annotationQuery = {
+      range: options.range,
+      annotation: {
+        name: options.annotation.name,
+        datasource: options.annotation.datasource,
+        enable: options.annotation.enable,
+        query: query
+      },
+      rangeRaw: options.rangeRaw
+    };
+
+    return this.backendSrv.datasourceRequest({
+      url: this.url + '/annotations',
+      method: 'POST',
+      data: annotationQuery
+    }).then(function(result){
+      return result.data;
+    });
+  };
+
   /////////////////////////////////////////////////////////////////////////
   /// Formatting methods
   ////////////////////////////////////////////////////////////////////////
@@ -489,10 +511,6 @@ function (angular, _, sdk, dateMath, kbn) {
 
     return datapoints;
   }
-
-  KairosDBDatasource.prototype.annotationQuery = function(options) {
-    return true;
-  };
 
   return KairosDBDatasource;
 });

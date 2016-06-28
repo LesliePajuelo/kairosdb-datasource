@@ -490,5 +490,9 @@ function (angular, _, sdk, dateMath, kbn) {
     return datapoints;
   }
 
+  KairosDBDatasource.prototype.annotationQuery = function(options) {
+    return true;
+  };
+
   return KairosDBDatasource;
 });

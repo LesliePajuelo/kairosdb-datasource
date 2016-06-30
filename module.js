@@ -12,7 +12,7 @@ function(KairosDBDatasource, KairosDBQueryCtrl) {
   KairosDBQueryOptionsCtrl.templateUrl = "partials/query.options.html";
 
   var KairosDBAnnotationsQueryCtrl = function() {}
-  KairosDBQueryOptionsCtrl.templateUrl = "partials/annotations.editor.html";
+  KairosDBAnnotationsQueryCtrl.templateUrl = "partials/annotations.editor.html";
 
   return {
     'Datasource': KairosDBDatasource,

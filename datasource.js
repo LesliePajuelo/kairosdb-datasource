@@ -23,6 +23,7 @@ function (angular, _, sdk, dateMath, kbn) {
     self = this;
   }
 
+
   // Called once per panel (graph)
   KairosDBDatasource.prototype.query = function(options) {
     var start = options.rangeRaw.from;
@@ -30,7 +31,7 @@ function (angular, _, sdk, dateMath, kbn) {
 
     var queries = _.compact(_.map(options.targets, _.partial(convertTargetToQuery, options)));
     var plotParams = _.compact(_.map(options.targets, function(target) {
-      var alias = self.templateSrv.replace(target.alias);
+      var alias = self.templateSrv.replace(target.metric);
       if (typeof target.alias === 'undefined' || target.alias === "") {
         alias = self.templateSrv.replace(target.metric);
       }
@@ -52,6 +53,7 @@ function (angular, _, sdk, dateMath, kbn) {
       return d.promise;
     }
 
+    var timeSeries = this.performTimeSeriesQuery(queries, start, end);
     return this.performTimeSeriesQuery(queries, start, end)
       .then(handleKairosDBQueryResponseAlias, handleQueryError);
   };
@@ -71,6 +73,7 @@ function (angular, _, sdk, dateMath, kbn) {
       data: reqBody
     };
 
+    var response = this.backendSrv.datasourceRequest(options);
     return this.backendSrv.datasourceRequest(options);
   };
 
@@ -225,25 +228,66 @@ function (angular, _, sdk, dateMath, kbn) {
   };
 
   KairosDBDatasource.prototype.annotationQuery = function(options) {
-    var query = this.templateSrv.replace(options.annotation.query, {}, 'glob');
-    var annotationQuery = {
-      range: options.range,
-      annotation: {
-        name: options.annotation.name,
-        datasource: options.annotation.datasource,
-        enable: options.annotation.enable,
-        query: query
-      },
-      rangeRaw: options.rangeRaw
+
+      var target = this.templateSrv.replace(options.annotation.query, {}, 'glob');
+      var kairosQuery = {
+        rangeRaw: options.rangeRaw,
+        targets: [{metric: target}],
+        format: 'json',
+        maxDataPoints: 100
+      };
+
+      return this.queryAnnotation(kairosQuery).then(function (result) {
+        var list = [];
+
+        for (var i = 0; i < result.data.length; i++) {
+          var target = result.data[i];
+
+          for (var y = 0; y < target.datapoints.length; y++) {
+            var datapoint = target.datapoints[y];
+            if (!datapoint[0]) {
+              continue;
+            }
+
+            list.push({
+              annotation: options.annotation,
+              time: datapoint[1],
+              title: target.target
+            });
+          }
+        }
+
+        return list;
+      });
+  };
+
+  KairosDBDatasource.prototype.queryAnnotation = function(options){
+    kairosQuery = {
+      rangeRaw: options.rangeRaw,
+      targets: [{metric: target}],
+      format: 'json',
+      maxDataPoints: 100
     };
 
-    return this.backendSrv.datasourceRequest({
-      url: this.url + '/annotations',
-      method: 'POST',
-      data: annotationQuery
-    }).then(function(result){
-      return result.data;
-    });
+  };
+
+  KairosDBDatasource.prototype.performTimeSeriesQueryAnnotation = function(queries, start, end) {
+    var reqBody = {
+      metrics: queries,
+      cache_time: 0
+    };
+
+    convertToKairosTime(start, reqBody, 'start');
+    convertToKairosTime(end, reqBody, 'end');
+
+    var options = {
+      method: 'GET',
+      url: this.url + '/api/v1/datapoints/query',
+      data: reqBody
+    };
+
+    var response = this.backendSrv.datasourceRequest(options);
+    return this.backendSrv.datasourceRequest(options);
   };
 
   /////////////////////////////////////////////////////////////////////////

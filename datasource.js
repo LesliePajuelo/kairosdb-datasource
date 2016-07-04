@@ -70,7 +70,6 @@ define([
         url: this.url + '/api/v1/datapoints/query',
         data: reqBody
       };
-
       return this.backendSrv.datasourceRequest(options);
     };
 
@@ -222,6 +221,75 @@ define([
       }
 
       return this.q.when([]);
+    };
+
+    KairosDBDatasource.prototype.annotationQuery = function(options){
+      var target = options.annotation.target;
+      var kairosQuery = {
+        rangeRaw: options.rangeRaw,
+        targets: [{ metric: options.annotation.target }],
+        format: 'json',
+        maxDataPoints: 100
+      };
+
+      var response = postmanQuery(kairosQuery);
+
+      return postmanQuery(kairosQuery).then(function(result) {
+        var list = [];
+
+        for (var i = 0; i < result.queries.length; i++) {
+          var target = result.queries[i];
+
+          for (var y = 0; y < target.results[0].values.length; y++) {
+            var datapoint = target.results[0].values[y];
+            if (!datapoint[0]) { continue; }
+
+            list.push({
+              annotation: options.annotation,
+              time: datapoint[0],
+              title: "<a href='https://google.com' target='_blank'>" + result.queries[0].results[0].name + "</a>"
+            });
+          }
+        }
+        return list;
+      });
+    };
+
+    function postmanQuery(kairosQuery) {
+      var metric;
+      if (!kairosQuery.targets[0].metric){
+        kairosQuery.targets[0].metric = "rapido.$TENANT.$ORIGIN.$ENDPOINT.navigation_timing.response_start"
+      }
+
+      var partial = _.partial(convertTargetToQuery, kairosQuery);
+      var mapped = _.map(kairosQuery.targets, partial);
+      var compact = _.compact(mapped);
+      metric = compact[0].name;
+
+
+      var settings = {
+        "async": true,
+        "crossDomain": true,
+        "url": "http://kairos.stg.rapido.globalproducts.qa.walmart.com/api/v1/datapoints/query",
+        "method": "POST",
+        "processData": false,
+        "data": "{\n  \"metrics\": [\n    {\n      " +
+        "\"tags\": {},\n      " +
+        "\"name\":" + metric + "," +
+        "\n      \"aggregators\": [\n        {\n          " +
+        "\"name\": \"percentile\",\n          " +
+        "\"percentile\": \"0.5\",\n          " +
+        "\"align_sampling\": true,\n          " +
+        "\"sampling\": {\n            " +
+        "\"value\": \"1\",\n            " +
+        "\"unit\": \"seconds\"\n          }\n        }\n      ]\n    }\n  ],\n  " +
+        "\"cache_time\": 0,\n  " +
+        "\"start_relative\": {\n    \"value\": \"30\",\n    \"unit\": \"days\"\n  }\n}"
+      }
+
+      return $.ajax(settings).done(function (response) {
+        return response;
+      });
     };
 
     /////////////////////////////////////////////////////////////////////////

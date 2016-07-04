@@ -232,9 +232,7 @@ define([
         maxDataPoints: 100
       };
 
-      var response = postmanQuery(kairosQuery);
-
-      return postmanQuery(kairosQuery).then(function(result) {
+      return this.postmanQuery(kairosQuery).then(function(result) {
         var list = [];
 
         for (var i = 0; i < result.queries.length; i++) {
@@ -255,10 +253,10 @@ define([
       });
     };
 
-    function postmanQuery(kairosQuery) {
+    KairosDBDatasource.prototype.postmanQuery = function(kairosQuery){
       var metric;
       if (!kairosQuery.targets[0].metric){
-        kairosQuery.targets[0].metric = "rapido.$TENANT.$ORIGIN.$ENDPOINT.navigation_timing.response_start"
+        kairosQuery.targets[0].metric = "rapido.$TENANT.$ORIGIN.$ENDPOINT.gitcommit"
       }
 
       var partial = _.partial(convertTargetToQuery, kairosQuery);
@@ -285,7 +283,7 @@ define([
         "\"unit\": \"seconds\"\n          }\n        }\n      ]\n    }\n  ],\n  " +
         "\"cache_time\": 0,\n  " +
         "\"start_relative\": {\n    \"value\": \"30\",\n    \"unit\": \"days\"\n  }\n}"
-      }
+      };
 
       return $.ajax(settings).done(function (response) {
         return response;

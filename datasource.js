@@ -234,18 +234,21 @@ define([
 
       return this.postmanQuery(kairosQuery).then(function(result) {
         var list = [];
+        var dataobject = {};
 
         for (var i = 0; i < result.queries.length; i++) {
           var target = result.queries[i];
 
           for (var y = 0; y < target.results[0].values.length; y++) {
             var datapoint = target.results[0].values[y];
-            if (!datapoint[0]) { continue; }
+            if (!datapoint[0] || datapoint === undefined) { continue; }
+
+            dataobject = JSON.parse(datapoint[1]);
 
             list.push({
               annotation: options.annotation,
               time: datapoint[0],
-              title: "<a href='https://google.com' target='_blank'>" + result.queries[0].results[0].name + "</a>"
+              title: "<a href=" + dataobject.giturl + " target='_blank'>" + dataobject.gitcommit + "</a>"
             });
           }
         }

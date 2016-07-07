@@ -271,7 +271,7 @@ define([
       var settings = {
         "async": true,
         "crossDomain": true,
-        "url": "http://kairos.stg.rapido.globalproducts.qa.walmart.com/api/v1/datapoints/query",
+        "url": this.url + "/api/v1/datapoints/query",
         "method": "POST",
         "processData": false,
         "data": "{\n  \"metrics\": [\n    {\n      " +
